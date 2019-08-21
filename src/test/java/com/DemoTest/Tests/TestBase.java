@@ -62,29 +62,21 @@ public  class TestBase  {
         return new Object[][]{
         	
         	 
-        	 // windows 10 
-        	 
-        	 new Object[]{"chrome", "latest", "Windows 10"},
-        	 
-           
-     			 // windows 8.1
-     			new Object[]{"firefox", "latest", "Windows 8.1"},
-     			new Object[]{"chrome", "latest", "Windows 8.1"},
-     			new Object[]{"firefox", "latest -1", "Windows 8.1"},
-     			new Object[]{"chrome", "latest -1", "Windows 8.1"},
+        	
+        	
+     			 // Linux 
+
+     			new Object[]{"firefox", "latest", "linux"},
+     			new Object[]{"firefox", "latest -1", "linux"},
+     			new Object[]{"firefox", "latest -2", "linux"},
      			
-     			new Object[]{"safari", "latest", "macOS 10.14"}, //12.0 safari version
+          new Object[]{"chrome", "latest", "linux"},
+          new Object[]{"chrome", "latest -1", "linux"},
+          new Object[]{"chrome", "latest -2", "linux"},
      			
-     			
-     			
-     			// windows 8
-     			new Object[]{"chrome", "latest", "Windows 8"},
-     			
-     			// windows 7
      		
-     			new Object[]{"firefox", "latest", "Windows 7"},
-     			new Object[]{"chrome", "latest", "Windows 7"},
-     		//	new Object[]{"Internet Explorer", "latest", "Windows 7"},
+     			
+     		
      			
                 
         };
@@ -152,10 +144,11 @@ public  class TestBase  {
         capabilities.setCapability(CapabilityType.VERSION, version);
         capabilities.setCapability(CapabilityType.PLATFORM, os);
         capabilities.setCapability("name", methodName);
-        capabilities.setCapability("extendedDebugging", true);
+     //   capabilities.setCapability("extendedDebugging", true);
       //  capabilities.setCapability("name", method);
-        capabilities.setCapability("tags", "Smoke_Test");
-        capabilities.setCapability("tags", "Regression_Test");
+     //   capabilities.setCapability("tags", "Smoke_Test");
+        capabilities.setCapability("tags", "headless-smoke-test");
+        capabilities.setCapability("build", "Sample Headless Tests");
       
     	
 
@@ -168,7 +161,7 @@ public  class TestBase  {
         // Launch remote browser and set it as the current thread
         webDriver.set(new RemoteWebDriver(
         		
-               new URL("https://" + username + ":" + accesskey + "@ondemand.saucelabs.com:443/wd/hub"), capabilities));
+               new URL("https://" + username + ":" + accesskey + "@ondemand.us-east-1.saucelabs.com/wd/hub"), capabilities));
              //   new URL("https://" + username + ":" + accesskey + "@ondemand.us-east-1.saucelabs.com/wd/hub"), capabilities));
         // public static final String URL = "http://" + USERNAME + ":" + ACCESS_KEY + "@ondemand.us-east-1.saucelabs.com/wd/hub"; 
 
@@ -211,16 +204,15 @@ public  class TestBase  {
       
     	
            DesiredCapabilities capabilities = new DesiredCapabilities();
-
   
            // set desired capabilities to launch appropriate browser on Sauce
            capabilities.setCapability(CapabilityType.BROWSER_NAME, browser);
            capabilities.setCapability(CapabilityType.VERSION, version);
            capabilities.setCapability(CapabilityType.PLATFORM, os);
            capabilities.setCapability("name", methodName);
-           capabilities.setCapability("extendedDebugging", true);
+         //  capabilities.setCapability("extendedDebugging", true);
            // commented out line below
-           capabilities.setCapability("prerun", obj);
+         //  capabilities.setCapability("prerun", obj);
           
 
            if (buildTag != null) {
@@ -229,7 +221,8 @@ public  class TestBase  {
 
     // Launch remote browser and set it as the current thread
            webDriver.set(new RemoteWebDriver(
-                   new URL("https://" + username + ":" + accesskey + "@ondemand.saucelabs.com:443/wd/hub"),
+
+                   new URL("https://" + username + ":" + accesskey + "@ondemand.us-east-1.saucelabs.com/wd/hub"), //https://ondemand.us-east-1.saucelabs.com/wd/hub
                    capabilities));
 
            // set current sessionId
