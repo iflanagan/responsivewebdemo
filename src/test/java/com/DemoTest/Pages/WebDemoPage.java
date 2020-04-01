@@ -1,5 +1,6 @@
 package com.DemoTest.Pages;
 
+import com.thoughtworks.selenium.webdriven.commands.SeleniumSelect;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -41,6 +42,24 @@ public class WebDemoPage {
         page.visitPage();
         return page;
     }
+    public static boolean getTitle(WebDriver driver, String title)
+	{
+		boolean isTitle = false;
+
+		String currentTitle = driver.getTitle();
+		if (currentTitle.equals(title))
+		{
+			System.out.println("Get Title Test Passed");
+			isTitle = true;
+		}
+		else
+		{
+			System.out.println("Get Title Test Failed");
+		}
+
+
+		return isTitle;
+	}
 
     public WebDemoPage(WebDriver driver) {
         this.driver = driver;

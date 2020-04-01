@@ -8,6 +8,7 @@ import com.saucelabs.testng.SauceOnDemandTestListener;
 import org.json.simple.JSONObject;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -15,31 +16,24 @@ import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Listeners;
+import org.testng.annotations.Parameters;
 
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.UnexpectedException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.LinkedList;
 
-/**
- * Simple TestNG test which demonstrates being instantiated via a DataProvider in order to supply multiple browser combinations that execute in parallel
- *
- * 
- */
 public  class TestBase  {
 
+
+    private static final String  targetEnvironment = null;
     private static final int sauce = 0;
-
 	public String buildTag = System.getenv("BUILD_TAG");
+    public static String username = System.getenv("SAUCE_USERNAME");
+    public static String accesskey = System.getenv("SAUCE_ACCESS_KEY");
 
-    public String username = System.getenv("SAUCE_USERNAME");
-
-    public String accesskey = System.getenv("SAUCE_ACCESS_KEY");
+    public static final String sauceURL = "https://" +username+ ":" +accesskey+ "@ondemand.us-west-1.saucelabs.com/wd/hub";
 
     /**
      * ThreadLocal variable which contains the  {@link WebDriver} instance which is used to perform browser interactions with.
@@ -57,16 +51,14 @@ public  class TestBase  {
      * @param testMethod
      * @return Two dimensional array of objects with browser, version, and platform information
      */
-    @DataProvider(name = "hardCodedBrowsers", parallel = true)
+    @DataProvider(name = "Browsers", parallel = true)
     public static Object[][] sauceBrowserDataProvider(Method testMethod) {
         return new Object[][]{
-        	
-        	 
+
         	 // windows 10 
         	 
         	 new Object[]{"chrome", "latest", "Windows 10"},
-        	 
-           
+
      			 // windows 8.1
      			new Object[]{"firefox", "latest", "Windows 8.1"},
      			new Object[]{"chrome", "latest", "Windows 8.1"},
@@ -85,29 +77,40 @@ public  class TestBase  {
      		
      			new Object[]{"firefox", "latest", "Windows 7"},
      			new Object[]{"chrome", "latest", "Windows 7"},
-     		
-     			
                 
         };
     }
-    
 
-    
-
-    @DataProvider(name = "hardCodedBrowsersemulator", parallel = true)
+    @DataProvider(name = "Emulators", parallel = true)
        	    public static Object[][] sauceBrowserDataProviderEmulator(Method testMethod) {
        	        return new Object[][]{
+
+       	                //
        	        	
        	         new Object[]{"Android GoogleAPI Emulator", "portrait", "Chrome", "8.0", "Android"},
+             //    new Object[]{" Samsung Galaxy Tab A 10 GoogleAPI Emulator", "landscape", "Chrome", "8.1", "Android"},
        	             
        	        };
        	    }
-    
-    
 
-    /**
-     * @return the {@link WebDriver} for the current thread
-     */
+    @DataProvider(name = "Simulators", parallel = true)
+    public static Object[][] sauceBrowserDataProviderSimulators(Method testMethod) {
+        return new Object[][]{
+
+                new Object[]{"iPhone XS Simulator", "portrait", "Safari", "13.2", "iOS"},
+
+        };
+    }
+
+    @DataProvider(name = "Devices", parallel = true)
+    public static Object[][] sauceBrowserDataProviderRDC(Method testMethod) {
+        return new Object[][]{
+                //Verify that your account has access to the devices below
+                new Object[]{"iOS", "iPhone 7", "10"},
+                new Object[]{"iOS", "iPhone SE", ""}
+        };
+    }
+
     public WebDriver getWebDriver() {
         return webDriver.get();
     }
@@ -132,105 +135,119 @@ public  class TestBase  {
      * @return
      * @throws MalformedURLException if an error occurs parsing the url
      */
-    protected void createDriver(String browser, String version, String os, String methodName)
-            throws MalformedURLException, UnexpectedException {
-        DesiredCapabilities capabilities = new DesiredCapabilities();
+    protected void createDriverSimulator(String DeviceName, String orientation, String browser, String os, String platformName, String methodName)  throws MalformedURLException, UnexpectedException {
 
+            DesiredCapabilities caps = new DesiredCapabilities();
+            // set desired capabilities to launch appropriate browser on Sauce
+            caps.setCapability("deviceName",DeviceName);
+            caps.setCapability("deviceOrientation", orientation);
+            caps.setCapability("browserName", browser);
+            caps.setCapability("platformVersion",os);
+            caps.setCapability("name", methodName);
+            caps.setCapability("tage", Constants.tagSimulator);
+
+            webDriver.set(new RemoteWebDriver(new URL(sauceURL), caps));
+
+        // set current sessionId
+            String id = ((RemoteWebDriver) getWebDriver()).getSessionId().toString();
+            sessionId.set(id);
+    }
+
+    protected void createDriverEmulator(String DeviceName, String orientation, String browser, String os, String platformName, String methodName)  throws MalformedURLException, UnexpectedException {
+
+        DesiredCapabilities caps = new DesiredCapabilities();
+        // set desired capabilities to launch appropriate browser on Sauce
+        caps.setCapability("deviceName",DeviceName);
+        caps.setCapability("deviceOrientation", orientation);
+        caps.setCapability("browserName", browser);
+        caps.setCapability("platformVersion",os);
+        caps.setCapability("name", methodName);
+        caps.setCapability("tage", Constants.tagEmulator);
+
+        // Launch remote browser and set it as the current thread
+        //       webDriver.set(new RemoteWebDriver(new URL("https://" +Constants.sauceUsername+ ":" +Constants.saucePassword+ "@ondemand.saucelabs.com:443/wd/hub"), capabilities));
+        webDriver.set(new RemoteWebDriver(new URL(sauceURL), caps));
+
+        // set current sessionId
+        String id = ((RemoteWebDriver) getWebDriver()).getSessionId().toString();
+        sessionId.set(id);
+    }
+
+
+    protected void createDriverNew(String browser, String version, String os, String methodName)  throws MalformedURLException, UnexpectedException {
+
+        JSONObject obj = new JSONObject();
+        obj.put("executable",Constants.preRunScriptFile);
+        obj.put("background","false");
+
+        DesiredCapabilities capabilities = new DesiredCapabilities();
+                // set desired capabilities to launch appropriate browser on Sauce
+                capabilities.setCapability(CapabilityType.BROWSER_NAME, browser);
+                capabilities.setCapability(CapabilityType.VERSION, version);
+                capabilities.setCapability(CapabilityType.PLATFORM, os);
+                capabilities.setCapability("name", methodName);
+                capabilities.setCapability("extendedDebugging", Constants.isDebugFlag);
+                capabilities.setCapability("tags", Constants.tag);
+                capabilities.setCapability("build", Constants.buildNumber);
+                //      capabilities.setCapability("TunnelIdentifier", Constants.tunnelIdentifier);
+                capabilities.setCapability("prerun", obj);
+
+        // Launch remote browser and set it as the current thread
+        //       webDriver.set(new RemoteWebDriver(new URL("https://" +Constants.sauceUsername+ ":" +Constants.saucePassword+ "@ondemand.saucelabs.com:443/wd/hub"), capabilities));
+        webDriver.set(new RemoteWebDriver(new URL(sauceURL), capabilities));
+
+        // set current sessionId
+        String id = ((RemoteWebDriver) getWebDriver()).getSessionId().toString();
+        sessionId.set(id);
+    }
+
+    protected void createDriver(String browser, String version, String os, String methodName)  throws MalformedURLException, UnexpectedException {
+
+        JSONObject obj = new JSONObject();
+        obj.put("executable",Constants.preRunScriptFile);
+        obj.put("background","false");
+
+        DesiredCapabilities capabilities = new DesiredCapabilities();
         // set desired capabilities to launch appropriate browser on Sauce
         capabilities.setCapability(CapabilityType.BROWSER_NAME, browser);
         capabilities.setCapability(CapabilityType.VERSION, version);
         capabilities.setCapability(CapabilityType.PLATFORM, os);
         capabilities.setCapability("name", methodName);
-        capabilities.setCapability("extendedDebugging", true);
-        capabilities.setCapability("tags", "Smoke_Test");
-        capabilities.setCapability("tags", "Regression_Test");
-      
-    	
-
-        if (buildTag != null) {
-        	
-            capabilities.setCapability("build", buildTag);
-        }
-        
+        capabilities.setCapability("extendedDebugging", Constants.isDebugFlag);
+        capabilities.setCapability("tags", Constants.tag);
+        capabilities.setCapability("build", Constants.buildNumber);
+  //      capabilities.setCapability("TunnelIdentifier", Constants.tunnelIdentifier);
+        capabilities.setCapability("prerun", obj);
 
         // Launch remote browser and set it as the current thread
-        webDriver.set(new RemoteWebDriver(
-        		
-               new URL("https://" + username + ":" + accesskey + "@ondemand.saucelabs.com:443/wd/hub"), capabilities));
+ //       webDriver.set(new RemoteWebDriver(new URL("https://" +Constants.sauceUsername+ ":" +Constants.saucePassword+ "@ondemand.saucelabs.com:443/wd/hub"), capabilities));
+        webDriver.set(new RemoteWebDriver(new URL(sauceURL), capabilities));
             
         // set current sessionId
         String id = ((RemoteWebDriver) getWebDriver()).getSessionId().toString();
         sessionId.set(id);
     }
-    
 
-    protected void createDriverlinux(String browser, String version, String os, String methodName)
-               throws MalformedURLException, UnexpectedException {
-    	
-    	
-    	  
-    	//  String prerunFile = "disablewarnonfraudsites";
-    	  
-    	/**
-    	  HashMap<String, String> prerunParams = new HashMap<String, String>();         
-          prerunParams.put("executable", "sauce-storage:Ianprerun");
-          prerunParams.put("background","false");
-          prerunParams.put("timeout","60");
-    	 **/
-    	
-    	/**
-      JSONObject obj = new JSONObject();
-      obj.put("executable","sauce-storage:Ianprerun");
-      LinkedList<String> list = new LinkedList<String>();
-      list.add("/S");
-      list.add("-a");
-      list.add("-q");
-      obj.put("args",list);
-      obj.put("background","false");     
-      System.out.print("\nHere is the arguments for prerun on the VM:\n" +obj);
-    **/
-    	
-    	 JSONObject obj = new JSONObject();
-    	// obj.put("executable","sauce-storage:preruntest.sh");
-    	 obj.put("executable","https://gist.githubusercontent.com/iflanagan/5af7ff6027ff9d0f3dbb3bea55d670b9/raw/17c4c6a908080af704478f17f5ef750d575cbcdb/preruntest.sh");
-    	 obj.put("background","false");
-      
-    	
-           DesiredCapabilities capabilities = new DesiredCapabilities();
+    protected void createDriverRDC(String platformName, String platformVersion, String deviceName, String methodName)
+            throws MalformedURLException, UnexpectedException {
 
-  
-           // set desired capabilities to launch appropriate browser on Sauce
-           capabilities.setCapability(CapabilityType.BROWSER_NAME, browser);
-           capabilities.setCapability(CapabilityType.VERSION, version);
-           capabilities.setCapability(CapabilityType.PLATFORM, os);
-           capabilities.setCapability("name", methodName);
-           capabilities.setCapability("extendedDebugging", true);
-           // commented out line below
-           capabilities.setCapability("prerun", obj);
-          
+        DesiredCapabilities capabilities = new DesiredCapabilities();
+        capabilities.setCapability("deviceName", deviceName);
+        capabilities.setCapability("platformVersion", platformVersion);
+        capabilities.setCapability("platformName", platformName);
+        capabilities.setCapability("name",  methodName);
+        // capabilities.setCapability("recordDeviceVitals", true);
+        //  capabilities.setCapability("cacheId", "testDemo");
+        //  capabilities.setCapability("noReset", true); // testobject_suite_name
 
-           if (buildTag != null) {
-               capabilities.setCapability("build", buildTag);
-           }
+        webDriver.set(new RemoteWebDriver(new URL(sauceURL), capabilities));
 
-    // Launch remote browser and set it as the current thread
-           webDriver.set(new RemoteWebDriver(
-                   new URL("https://" + username + ":" + accesskey + "@ondemand.saucelabs.com:443/wd/hub"),
-                   capabilities));
-
-           // set current sessionId
-           String id = ((RemoteWebDriver) getWebDriver()).getSessionId().toString();
-           sessionId.set(id);
-
-   }
+        // set current sessionId
+        String id = ((RemoteWebDriver) getWebDriver()).getSessionId().toString();
+        sessionId.set(id);
+    }
 
 
-
-    /**
-     * Method that gets invoked after test.
-     * Dumps browser log and
-     * Closes the browser
-     */
     @AfterMethod
     public void tearDown(ITestResult result) throws Exception {
         ((JavascriptExecutor) webDriver.get()).executeScript("sauce:job-result=" + (result.isSuccess() ? "passed" : "failed"));

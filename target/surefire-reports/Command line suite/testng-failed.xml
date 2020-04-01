@@ -3,9 +3,19 @@
 <suite name="Failed suite [Command line suite]" verbose="0">
   <test name="Command line test" preserve-order="false">
     <classes>
-      <class name="com.DemoTest.Tests.HeadlessTest"/>
+      <class name="com.DemoTest.Tests.FileDownloadTest"/>
       <class name="com.DemoTest.Tests.TestBase"/>
       <class name="com.DemoTest.Tests.WebDemoTest"/>
     </classes>
   </test> <!-- Command line test -->
+  <test name="Command line test(failed)">
+    <classes>
+      <class name="com.DemoTest.Tests.WebDemoTest">
+        <methods>
+          <include name="LoginDesktopParameterExample"/>
+          <include name="tearDown"/>
+        </methods>
+      </class> <!-- com.DemoTest.Tests.WebDemoTest -->
+    </classes>
+  </test> <!-- Command line test(failed) -->
 </suite> <!-- Failed suite [Command line suite] -->

@@ -42,17 +42,15 @@
             <version>2.1.23</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.0</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -60,18 +58,11 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.12.4</version>
                 <configuration>
-                	<property>
-			     <name>parallel</name>
-			     <value>methods</value>
-			   </property>
-			   <property>
-			     <name>threadCount</name>
-			     <value>3</value>
-			   </property>
-			   <property>
-			     <name>dataproviderthreadcount</name>
-			     <value>100</value>
-			   </property>
+                    <suiteXmlFiles>
+                        <!-- Suite file injection parameter from command line -->
+                        <!--suppress UnresolvedMavenProperty -->
+                        <suiteXmlFile>${suiteFile}</suiteXmlFile>
+                    </suiteXmlFiles>
                 </configuration>
             </plugin>
         </plugins>
